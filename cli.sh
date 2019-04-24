@@ -3,6 +3,7 @@
 cat /etc/welcome.txt
 
 # Set Token
+# shellcheck disable= SC2155
 export HASSIO_TOKEN=$(cat /etc/machine-id)
 
 # Run CLI
