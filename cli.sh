@@ -1,6 +1,7 @@
 #!/bin/bash
 
 cat /etc/welcome.txt
+echo "172.30.32.2 supervisor" >> /etc/hosts
 
 # Set Token
 # shellcheck disable=SC2155
