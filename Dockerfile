@@ -6,10 +6,10 @@ SHELL ["/bin/ash", "-o", "pipefail", "-c"]
 
 # Install CLI
 ARG BUILD_ARCH
-ARG HASSIO_CLI_VERSION=3.1.1
+ARG CLI_VERSION=4.0.0
 RUN apk add --no-cache curl \
-    && curl -Lso /usr/bin/hassio https://github.com/home-assistant/hassio-cli/releases/download/${HASSIO_CLI_VERSION}/hassio_${BUILD_ARCH} \
-    && chmod a+x /usr/bin/hassio \
+    && curl -Lso /usr/bin/ha https://github.com/home-assistant/cli/releases/download/${CLI_VERSION}/ha_${BUILD_ARCH} \
+    && chmod a+x /usr/bin/ha \
     && apk del curl
 
 COPY cli.sh /bin/

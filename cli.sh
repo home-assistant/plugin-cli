@@ -4,12 +4,12 @@ cat /etc/welcome.txt
 
 # Set Token
 # shellcheck disable=SC2155
-export HASSIO_TOKEN=$(cat /etc/machine-id)
+export SUPERVISOR_TOKEN=$(cat /etc/machine-id)
 
 # Run CLI
 COMMAND=""
 while true; do
-    read -rp "hassio > " COMMAND
+    read -rp "ha > " COMMAND
 
     # Abort to host?
     if [ "$COMMAND" == "login" ]; then
@@ -19,6 +19,6 @@ while true; do
     fi
 
     # shellcheck disable=SC2086
-    hassio $COMMAND
+    ha $COMMAND
     echo ""
 done
