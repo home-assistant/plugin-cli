@@ -15,4 +15,4 @@ RUN apk add --no-cache curl \
 COPY cli.sh /bin/
 COPY welcome.txt /etc/
 
-CMD ["/bin/cli.sh"]
+ENTRYPOINT ["/bin/cli.sh"]
