@@ -3,9 +3,11 @@
 cat /etc/welcome.txt
 echo "172.30.32.2 supervisor" >> /etc/hosts
 
-# Set Token
-# shellcheck disable=SC2155
-export SUPERVISOR_TOKEN=$(cat /etc/machine-id)
+# Fallback old token handling
+if [ -z "${SUPERVISOR_TOKEN}" ]; then
+    # shellcheck disable=SC2155
+    export SUPERVISOR_TOKEN=$(cat /etc/machine-id)
+fi
 
 # Run CLI
 COMMAND=""
