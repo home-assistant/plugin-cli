@@ -50,6 +50,8 @@ jobs:
   dependsOn:
   - 'Hadolint'
   - 'ShellCheck'
+  variables:
+  - group: docker
   pool:
     vmImage: 'ubuntu-latest'
   steps:
@@ -71,6 +73,8 @@ jobs:
   dependsOn:
   - 'Hadolint'
   - 'ShellCheck'
+  variables:
+  - group: docker
   pool:
     vmImage: 'ubuntu-latest'
   steps:
