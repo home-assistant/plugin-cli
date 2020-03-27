@@ -39,8 +39,9 @@ jobs:
   - script: sudo docker pull koalaman/shellcheck:$(versionShellCheck)
     displayName: 'Install ShellCheck'
   - script: |
+      shopt -s globstar
       sudo docker run --rm -i \
-        -v $(pwd):/mnt:ro koalaman/shellcheck:$(versionShellCheck) *.sh
+        -v $(pwd):/mnt:ro koalaman/shellcheck:$(versionShellCheck) **/*.sh
     displayName: 'Run ShellCheck'
 
 
