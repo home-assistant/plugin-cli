@@ -15,5 +15,4 @@ RUN apk add --no-cache curl \
 
 COPY rootfs /
 
-ENTRYPOINT ["/bin/sh", "-c"]
-CMD ["/usr/bin/cli.sh"]
+ENTRYPOINT ["/usr/bin/cli.sh"]
