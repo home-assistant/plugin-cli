@@ -1,13 +1,13 @@
 #!/bin/bash
 
 cat /etc/welcome.txt
+sleep 1
 
 # Run CLI
 COMMAND=""
 while true; do
-    echo -n $'\e[32mha > \e[0m'
     # shellcheck disable=SC2016
-    COMMAND="$(rlwrap -H /tmp/.cli_history sh -c 'read -r CMD && echo $CMD')"
+    COMMAND="$(rlwrap -S $'\e[32mha > \e[0m' -H /tmp/.cli_history sh -c 'read -r CMD && echo $CMD')"
 
     # Abort to host?
     if [ "$COMMAND" == "login" ]; then
