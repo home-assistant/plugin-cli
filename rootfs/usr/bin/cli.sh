@@ -1,18 +1,13 @@
 #!/bin/bash
 
 cat /etc/welcome.txt
-echo "172.30.32.2 supervisor" >> /etc/hosts
-
-# Fallback old token handling
-if [ -z "${SUPERVISOR_TOKEN}" ]; then
-    # shellcheck disable=SC2155
-    export SUPERVISOR_TOKEN=$(cat /etc/machine-id)
-fi
 
 # Run CLI
 COMMAND=""
 while true; do
-    read -rp "ha > " COMMAND
+    echo -n $'\e[32mha > \e[0m'
+    # shellcheck disable=SC2016
+    COMMAND="$(rlwrap -H /tmp/.cli_history sh -c 'read -r CMD && echo $CMD')"
 
     # Abort to host?
     if [ "$COMMAND" == "login" ]; then
