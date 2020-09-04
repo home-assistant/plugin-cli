@@ -5,6 +5,7 @@ FROM $BUILD_FROM
 SHELL ["/bin/ash", "-o", "pipefail", "-c"]
 
 ARG BUILD_ARCH
+WORKDIR /usr/src
 
 # Install rlwrap
 ARG RLWRAP_VERSION
