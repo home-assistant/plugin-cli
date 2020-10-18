@@ -28,6 +28,4 @@ RUN curl -Lso /usr/bin/ha https://github.com/home-assistant/cli/releases/downloa
     && chmod a+x /usr/bin/ha
 
 COPY rootfs /
-
 WORKDIR /
-ENTRYPOINT ["/usr/bin/cli.sh"]
