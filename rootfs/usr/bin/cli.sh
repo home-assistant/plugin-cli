@@ -1,7 +1,6 @@
 #!/bin/bash
 
-cat /etc/welcome.txt
-sleep 1
+ha banner | true
 
 # Run CLI
 COMMAND=""
