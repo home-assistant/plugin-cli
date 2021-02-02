@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ha banner | true
+ha banner || true
 
 # Run CLI
 COMMAND=""
