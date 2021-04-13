@@ -13,6 +13,7 @@
         "RLWRAP_VERSION": "0.44"
     },
     "labels": {
-        "io.hass.type": "cli"
+        "io.hass.type": "cli",
+        "org.opencontainers.image.source": "https://github.com/home-assistant/plugin-cli"
     }
 }
