@@ -14,6 +14,12 @@
     },
     "labels": {
         "io.hass.type": "cli",
-        "org.opencontainers.image.source": "https://github.com/home-assistant/plugin-cli"
+        "org.opencontainers.image.title": "Home Assistant CLI Plugin",
+        "org.opencontainers.image.description": "Home Assistant Supervisor plugin for CLI",
+        "org.opencontainers.image.source": "https://github.com/home-assistant/plugin-cli",
+        "org.opencontainers.image.authors": "The Home Assistant Authors",
+        "org.opencontainers.image.url": "https://www.home-assistant.io/",
+        "org.opencontainers.image.documentation": "https://www.home-assistant.io/docs/",
+        "org.opencontainers.image.licenses": "Apache License 2.0"
     }
 }
