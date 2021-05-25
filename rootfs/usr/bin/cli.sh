@@ -5,8 +5,7 @@ ha banner || true
 # Run CLI
 COMMAND=""
 while true; do
-    # shellcheck disable=SC2016
-    COMMAND="$(rlwrap -S $'\e[32mha > \e[0m' -H /tmp/.cli_history sh -c 'read -r CMD && echo $CMD')"
+    COMMAND="$(rlwrap -S $'\e[32mha > \e[0m' -H /tmp/.cli_history -o cat)"
 
     # Abort to host?
     if [ "$COMMAND" == "login" ]; then
@@ -15,7 +14,6 @@ while true; do
         exit
     fi
 
-    # shellcheck disable=SC2086
-    ha $COMMAND
+    echo "$COMMAND" | xargs ha
     echo ""
 done
