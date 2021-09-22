@@ -10,7 +10,7 @@
     },
     "args": {
         "CLI_VERSION": "4.14.0",
-        "RLWRAP_VERSION": "0.44"
+        "RLWRAP_VERSION": "0.45.2"
     },
     "labels": {
         "io.hass.type": "cli",
