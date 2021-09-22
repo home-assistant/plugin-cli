@@ -13,7 +13,7 @@ RUN apk add --no-cache --virtual .build-deps \
         build-base \
         readline-dev \
         ncurses-dev \
-    && curl -L -s "https://github.com/hanslub42/rlwrap/releases/download/${RLWRAP_VERSION}/rlwrap-${RLWRAP_VERSION}.tar.gz" \
+    && curl -L -s "https://github.com/hanslub42/rlwrap/releases/download/v${RLWRAP_VERSION}/rlwrap-${RLWRAP_VERSION}.tar.gz" \
         | tar zxvf - -C /usr/src/ \
     && cd rlwrap-${RLWRAP_VERSION} \
     && ./configure \
