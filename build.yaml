@@ -10,7 +10,7 @@ codenotary:
   signer: notary@home-assistant.io
   base_image: notary@home-assistant.io
 args:
-  CLI_VERSION: 4.17.0
+  CLI_VERSION: 4.18.0
   RLWRAP_VERSION: 0.45.2
 labels:
   io.hass.type: cli
