@@ -13,7 +13,7 @@ cosign:
   identity: https://github.com/home-assistant/plugin-cli/.*
 args:
   CLI_VERSION: 4.29.0
-  RLWRAP_VERSION: 0.45.2
+  RLWRAP_VERSION: 0.46.1
 labels:
   io.hass.type: cli
   org.opencontainers.image.title: Home Assistant CLI Plugin
