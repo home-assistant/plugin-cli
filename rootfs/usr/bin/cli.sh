@@ -19,6 +19,6 @@ while true; do
         COMMAND=$(echo "$COMMAND" | cut -b 3-)
     fi
 
-    echo "$COMMAND" | xargs ha
+    echo "$COMMAND" | xargs -o ha
     echo ""
 done
