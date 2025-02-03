@@ -2,7 +2,7 @@
 // https://github.com/microsoft/vscode-dev-containers/tree/v0.155.1/containers/alpine
 {
 	"name": "Alpine",
-	"image": "mcr.microsoft.com/vscode/devcontainers/base:0-alpine-3.20",
+	"image": "mcr.microsoft.com/devcontainers/base:0-alpine-3.20",
 	
 	// Set *default* container specific settings.json values on container create. 
 	"settings": {
