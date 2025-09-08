@@ -12,7 +12,7 @@ cosign:
   base_identity: https://github.com/home-assistant/docker-base/.*
   identity: https://github.com/home-assistant/plugin-cli/.*
 args:
-  CLI_VERSION: 4.40.1
+  CLI_VERSION: 4.41.0
   RLWRAP_VERSION: 0.46.1
 labels:
   io.hass.type: cli
