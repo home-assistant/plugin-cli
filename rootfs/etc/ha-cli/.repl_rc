@@ -1,0 +1,54 @@
+# ha REPL rcfile
+# shopt -s histappend
+# shopt -s checkwinsize
+# shopt -s progcomp 2>/dev/null || true
+
+# History configuration
+HISTFILE=/tmp/.cli_history
+HISTSIZE=1000
+HISTFILESIZE=2000
+PROMPT_COMMAND='history -a; history -c; history -r'
+
+# Prompt
+PS1='\[\e[32m\]ha > \[\e[0m\]'
+
+# Friendly helpers
+help() { 
+    echo 'Note: Use "login" to enter operating system shell'
+    echo '--------------------------------'
+    ha help
+}
+login() { 
+    echo 'Entering OS shell...'
+    exit 10; 
+    }
+
+# Load ha completion if available
+if command -v ha >/dev/null 2>&1; then
+  if [ -f /etc/bash_completion.d/ha ]; then
+    # Load from standard location
+    . /etc/bash_completion.d/ha
+
+    # Treat 'ha' as implied: use ha's completion for bare subcommands too
+    # Common generators define either __start_ha (Cobra) or _ha (generic)
+    if declare -F __start_ha >/dev/null 2>&1; then
+      complete -D -F __start_ha
+    elif declare -F _ha >/dev/null 2>&1; then
+      complete -D -F _ha
+    fi
+  fi
+else
+  echo 'Warning: ha command not found; commands will fail' >&2
+fi
+
+# Route unknown commands to ha (supports shorthand like: core info)
+command_not_found_handle() {
+  if command -v ha >/dev/null 2>&1; then
+    ha "$@"
+    return $?
+  fi
+  echo "bash: $1: command not found" >&2
+  return 127
+}
+
+echo 'Tip: You can omit the leading "ha". For example: core info'
