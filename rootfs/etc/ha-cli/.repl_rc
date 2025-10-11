@@ -1,0 +1,84 @@
+# ha REPL rcfile
+
+
+# History configuration
+HISTFILE=/tmp/.cli_history
+HISTSIZE=1000
+HISTFILESIZE=2000
+PROMPT_COMMAND='history -a; history -c; history -r'
+
+# Prompt
+PS1='\[\e[32m\]ha > \[\e[0m\]'
+
+# Intercept unknown commands and pass them to 'ha'
+command_not_found_handle() {
+    # Execute as 'ha <command> <args>'
+    ha "$@"
+    return $?
+}
+
+# Friendly helpers
+help() { 
+    echo 'Note: Use "login" to enter operating system shell'
+    echo ''
+    echo '--------------------------------'
+    ha help
+}
+login() { 
+    echo 'Entering OS shell...'
+    exit 10; 
+    }
+
+# Load bash-completion core and ha completion if available
+if command -v ha >/dev/null 2>&1; then
+  if [ -f /etc/bash_completion.d/ha ]; then
+    # Load from standard location (native HA completion registers itself for 'ha')
+    . /etc/bash_completion.d/ha
+    
+    # Wrapper function to inject 'ha' as first argument for all completions
+    if declare -F __start_ha >/dev/null 2>&1; then
+      __start_ha >/dev/null 2>&1 || true
+      
+      # Clear ALL existing completions to ensure our wrapper is used
+      while read -r cmd; do
+        complete -r "$cmd" 2>/dev/null || true
+      done < <(complete -p | awk '{print $NF}')
+      
+      # Universal completion handler - wraps everything as 'ha ...'
+      __ha_repl_complete() {
+        local cur prev words cword
+        
+        # Handle empty command line specially
+        if [[ ${#COMP_WORDS[@]} -eq 0 || ( ${#COMP_WORDS[@]} -eq 1 && -z "${COMP_WORDS[0]}" ) ]]; then
+          COMP_LINE="ha "
+          COMP_POINT=3
+          COMP_WORDS=(ha "")
+          COMP_CWORD=1
+        else
+          # Prepend 'ha' to existing words
+          COMP_LINE="ha $COMP_LINE"
+          COMP_POINT=$((COMP_POINT + 3))
+          COMP_WORDS=(ha "${COMP_WORDS[@]}")
+          COMP_CWORD=$((COMP_CWORD + 1))
+        fi
+        
+        COMPREPLY=()
+        __start_ha
+      }
+      
+      # Register our completion as the default for EVERYTHING
+      complete -D -F __ha_repl_complete  # Default for any command
+      complete -E -F __ha_repl_complete  # Empty command line
+      complete -I -F __ha_repl_complete 2>/dev/null || true  # Initial word (bash 5+)
+    fi  
+
+  fi
+
+  # Note: __start_ha is defined by the ha completion script
+
+  # Use native completion only; no implicit injection or extra bindings.
+else
+  echo 'Warning: ha command not found; commands will fail' >&2
+fi
+
+# Use commands with explicit 'ha' prefix; native completion supports 'ha ...'
