@@ -24,45 +24,56 @@ login() {
     exit 10; 
     }
 
-# Load ha completion if available
+# Load bash-completion core and ha completion if available
 if command -v ha >/dev/null 2>&1; then
   if [ -f /etc/bash_completion.d/ha ]; then
-    # Load from standard location
+    # Load from standard location (native HA completion registers itself for 'ha')
     . /etc/bash_completion.d/ha
-    # Treat 'ha' as implied for completion: wrap to inject 'ha' at position 0
-    # Use the reference-generated function name __start_ha when available
+    
+    # Wrapper function to inject 'ha' as first argument for all completions
     if declare -F __start_ha >/dev/null 2>&1; then
-      __start_ha_implicit() {
-        local __save_words __save_cword
-        __save_words=("${COMP_WORDS[@]}")
-        __save_cword=${COMP_CWORD}
-        COMP_WORDS=(ha "${COMP_WORDS[@]}")
-        ((COMP_CWORD++))
+      __start_ha >/dev/null 2>&1 || true
+      
+      # Clear ALL existing completions to ensure our wrapper is used
+      while read -r cmd; do
+        complete -r "$cmd" 2>/dev/null || true
+      done < <(complete -p | awk '{print $NF}')
+      
+      # Universal completion handler - wraps everything as 'ha ...'
+      __ha_repl_complete() {
+        local cur prev words cword
+        
+        # Handle empty command line specially
+        if [[ ${#COMP_WORDS[@]} -eq 0 || ( ${#COMP_WORDS[@]} -eq 1 && -z "${COMP_WORDS[0]}" ) ]]; then
+          COMP_LINE="ha "
+          COMP_POINT=3
+          COMP_WORDS=(ha "")
+          COMP_CWORD=1
+        else
+          # Prepend 'ha' to existing words
+          COMP_LINE="ha $COMP_LINE"
+          COMP_POINT=$((COMP_POINT + 3))
+          COMP_WORDS=(ha "${COMP_WORDS[@]}")
+          COMP_CWORD=$((COMP_CWORD + 1))
+        fi
+        
+        COMPREPLY=()
         __start_ha
-        COMP_WORDS=("${__save_words[@]}")
-        COMP_CWORD=${__save_cword}
       }
-      # Use default completion for unknown commands so bare subcommands complete
-      if [[ $(type -t compopt) = builtin ]]; then
-        complete -D -o default -F __start_ha_implicit
-      else
-        complete -D -o default -o nospace -F __start_ha_implicit
-      fi
-    fi
+      
+      # Register our completion as the default for EVERYTHING
+      complete -D -F __ha_repl_complete  # Default for any command
+      complete -E -F __ha_repl_complete  # Empty command line
+      complete -I -F __ha_repl_complete 2>/dev/null || true  # Initial word (bash 5+)
+    fi  
 
   fi
+
+  # Note: __start_ha is defined by the ha completion script
+
+  # Use native completion only; no implicit injection or extra bindings.
 else
   echo 'Warning: ha command not found; commands will fail' >&2
 fi
 
-# Route unknown commands to ha (supports shorthand like: core info)
-command_not_found_handle() {
-  if command -v ha >/dev/null 2>&1; then
-    ha "$@"
-    return $?
-  fi
-  echo "bash: $1: command not found" >&2
-  return 127
-}
-
-echo 'Tip: You can omit the leading "ha". For example: core info'
+# Use commands with explicit 'ha' prefix; native completion supports 'ha ...'
