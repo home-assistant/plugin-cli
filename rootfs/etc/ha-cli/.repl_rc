@@ -15,6 +15,7 @@ PS1='\[\e[32m\]ha > \[\e[0m\]'
 # Friendly helpers
 help() { 
     echo 'Note: Use "login" to enter operating system shell'
+    echo ''
     echo '--------------------------------'
     ha help
 }
@@ -28,14 +29,27 @@ if command -v ha >/dev/null 2>&1; then
   if [ -f /etc/bash_completion.d/ha ]; then
     # Load from standard location
     . /etc/bash_completion.d/ha
-
-    # Treat 'ha' as implied: use ha's completion for bare subcommands too
-    # Common generators define either __start_ha (Cobra) or _ha (generic)
+    # Treat 'ha' as implied for completion: wrap to inject 'ha' at position 0
+    # Use the reference-generated function name __start_ha when available
     if declare -F __start_ha >/dev/null 2>&1; then
-      complete -D -F __start_ha
-    elif declare -F _ha >/dev/null 2>&1; then
-      complete -D -F _ha
+      __start_ha_implicit() {
+        local __save_words __save_cword
+        __save_words=("${COMP_WORDS[@]}")
+        __save_cword=${COMP_CWORD}
+        COMP_WORDS=(ha "${COMP_WORDS[@]}")
+        ((COMP_CWORD++))
+        __start_ha
+        COMP_WORDS=("${__save_words[@]}")
+        COMP_CWORD=${__save_cword}
+      }
+      # Use default completion for unknown commands so bare subcommands complete
+      if [[ $(type -t compopt) = builtin ]]; then
+        complete -D -o default -F __start_ha_implicit
+      else
+        complete -D -o default -o nospace -F __start_ha_implicit
+      fi
     fi
+
   fi
 else
   echo 'Warning: ha command not found; commands will fail' >&2
