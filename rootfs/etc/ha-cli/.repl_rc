@@ -1,7 +1,5 @@
 # ha REPL rcfile
-# shopt -s histappend
-# shopt -s checkwinsize
-# shopt -s progcomp 2>/dev/null || true
+
 
 # History configuration
 HISTFILE=/tmp/.cli_history
@@ -11,6 +9,13 @@ PROMPT_COMMAND='history -a; history -c; history -r'
 
 # Prompt
 PS1='\[\e[32m\]ha > \[\e[0m\]'
+
+# Intercept unknown commands and pass them to 'ha'
+command_not_found_handle() {
+    # Execute as 'ha <command> <args>'
+    ha "$@"
+    return $?
+}
 
 # Friendly helpers
 help() { 
