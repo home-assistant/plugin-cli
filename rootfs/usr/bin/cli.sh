@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Print banner (best-effort)
-# ha banner || true
+ha banner || true
 
 # Create a minimal rcfile to drive an interactive Bash as our REPL
 RC_FILE=/etc/ha-cli/.repl_rc
