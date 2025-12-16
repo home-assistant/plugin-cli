@@ -27,7 +27,7 @@ jobs:
       publish: ${{ steps.version.outputs.publish }}
     steps:
     - name: Checkout the repository
-      uses: actions/checkout@v5.0.0
+      uses: actions/checkout@v6.0.1
       with:
         fetch-depth: 0
 
@@ -44,7 +44,7 @@ jobs:
   build:
     name: Build ${{ matrix.arch }} plugin
     needs: init
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runs-on }}
     permissions:
       contents: read
       packages: write
@@ -52,9 +52,13 @@ jobs:
     strategy:
       matrix:
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
+        include:
+          - runs-on: ubuntu-24.04
+          - arch: aarch64
+            runs-on: ubuntu-24.04-arm
     steps:
     - name: Checkout the repository
-      uses: actions/checkout@v5.0.0
+      uses: actions/checkout@v6.0.1
    
     - name: Login to GitHub Container Registry
       if: needs.init.outputs.publish == 'true'
@@ -69,8 +73,9 @@ jobs:
       run: echo "BUILD_ARGS=--test" >> $GITHUB_ENV
 
     - name: Build plugin
-      uses: home-assistant/builder@2025.09.0
+      uses: home-assistant/builder@2025.11.0
       with:
+        image: ${{ matrix.arch }}
         args: |
           $BUILD_ARGS \
           --${{ matrix.arch }} \
@@ -85,7 +90,7 @@ jobs:
     steps:
     - name: Checkout the repository
       if: needs.init.outputs.publish == 'true'
-      uses: actions/checkout@v5.0.0
+      uses: actions/checkout@v6.0.1
 
     - name: Initialize git
       if: needs.init.outputs.publish == 'true'
