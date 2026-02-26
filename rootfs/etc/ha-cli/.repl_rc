@@ -46,8 +46,6 @@ if command -v ha >/dev/null 2>&1; then
       
       # Universal completion handler - wraps everything as 'ha ...'
       __ha_repl_complete() {
-        local cur prev words cword
-        
         # Handle empty command line specially
         if [[ ${#COMP_WORDS[@]} -eq 0 || ( ${#COMP_WORDS[@]} -eq 1 && -z "${COMP_WORDS[0]}" ) ]]; then
           COMP_LINE="ha "
