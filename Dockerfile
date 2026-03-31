@@ -22,7 +22,7 @@ RUN apk add --no-cache --virtual .build-deps \
     && rm -rf /usr/src/*
 
 # Install CLI
-ARG CLI_VERSION=4.46.0
+ARG CLI_VERSION=5.0.0
 ARG TARGETARCH
 RUN \
     if [ -z "${TARGETARCH}" ]; then \
