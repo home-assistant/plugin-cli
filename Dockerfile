@@ -4,6 +4,10 @@ FROM ghcr.io/home-assistant/base:3.24-2026.06.1@sha256:94ff231402a5e7ad2a82e261a
 # Set shell
 SHELL ["/bin/ash", "-o", "pipefail", "-c"]
 
+# This image runs no unsupervised processes: skip the blind
+# SIGTERM-to-SIGKILL grace sleep at shutdown.
+ENV S6_KILL_GRACETIME=0
+
 WORKDIR /usr/src
 
 # Install rlwrap
