@@ -8,15 +8,21 @@ set -o ignoreeof
 
 # Intercept unknown commands and pass them to 'ha'
 command_not_found_handle() {
+    if ! command -v ha >/dev/null 2>&1; then
+        echo "bash: $1: command not found" >&2
+        return 127
+    fi
     ha "$@"
 }
 
 # Friendly helpers
 help() {
-    echo 'Note: Use "login" to enter operating system shell'
-    echo ''
-    echo '--------------------------------'
-    ha help
+    if [ $# -eq 0 ]; then
+        echo 'Note: Use "login" to enter operating system shell'
+        echo ''
+        echo '--------------------------------'
+    fi
+    ha help "$@"
 }
 
 login() {
@@ -45,8 +51,13 @@ if command -v ha >/dev/null 2>&1; then
 
             # Universal completion handler - wraps everything as 'ha ...'
             __ha_repl_complete() {
-                # Handle empty command line specially
-                if [[ ${#COMP_WORDS[@]} -eq 0 || ( ${#COMP_WORDS[@]} -eq 1 && -z "${COMP_WORDS[0]}" ) ]]; then
+                if [[ ${COMP_WORDS[0]} == "ha" ]]; then
+                    # Explicit 'ha ...' - complete as-is, no prefixing needed
+                    COMPREPLY=()
+                    __start_ha
+                    return
+                elif [[ ${#COMP_WORDS[@]} -eq 0 || ( ${#COMP_WORDS[@]} -eq 1 && -z "${COMP_WORDS[0]}" ) ]]; then
+                    # Handle empty command line specially
                     COMP_LINE="ha "
                     COMP_POINT=3
                     COMP_WORDS=(ha "")
