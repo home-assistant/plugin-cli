@@ -13,6 +13,5 @@ if command -v ha >/dev/null 2>&1; then
   fi
 fi
 
-
 # Start interactive bash with our rcfile; no user profiles
 exec bash --noprofile --rcfile "$RC_FILE" -i
