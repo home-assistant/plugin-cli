@@ -8,8 +8,6 @@ SHELL ["/bin/ash", "-o", "pipefail", "-c"]
 # SIGTERM-to-SIGKILL grace sleep at shutdown.
 ENV S6_KILL_GRACETIME=0
 
-WORKDIR /usr/src
-
 # Install dependencies
 RUN apk add --no-cache \
     bash-completion
@@ -28,11 +26,11 @@ RUN \
         esac \
     && curl -Lfso /usr/bin/ha https://github.com/home-assistant/cli/releases/download/${CLI_VERSION}/ha_${CLI_ARCH} \
     && chmod a+x /usr/bin/ha \
-    && mkdir -p /etc/ha-cli/bin \
-    && ln -s /usr/bin/ha /etc/ha-cli/bin/ha
+    && mkdir -p /usr/share/ha-cli/bin \
+    && ln -s /usr/bin/ha /usr/share/ha-cli/bin/ha \
+    && ha completion bash > /etc/bash_completion.d/ha
 
 COPY rootfs /
-WORKDIR /
 
 LABEL \
     io.hass.type="cli" \

@@ -6,6 +6,9 @@ PS1='\[\e[32m\]ha > \[\e[0m\]'
 # Ignore EOF (Ctrl+D) so it does not exit the REPL
 set -o ignoreeof
 
+# Disable history expansion so '!' in arguments reaches ha verbatim
+set +H
+
 # List completion candidates one per line - the completion descriptions
 # make readline's multi-column layout hard to read on wide terminals
 bind "set completion-display-width 0"
@@ -34,63 +37,67 @@ login() {
     exit 10
 }
 
+# 'jobs' is both a Bash builtin and an ha command - the builtin would take
+# precedence over command_not_found_handle, so shadow it with a function
+jobs() {
+    ha jobs "$@"
+}
+
 if command -v ha >/dev/null 2>&1; then
-    # Load bash-completion core if not already loaded through the system
-    # bashrc - it provides functions used by the generated ha completion
+    # Load bash-completion if the system bashrc did not already do it: it
+    # provides helper functions used by the generated ha completion and
+    # sources it from /etc/bash_completion.d
     if ! declare -F _get_comp_words_by_ref >/dev/null 2>&1 \
             && [ -f /usr/share/bash-completion/bash_completion ]; then
         . /usr/share/bash-completion/bash_completion
     fi
 
-    if [ -f /etc/bash_completion.d/ha ]; then
-        # Load from standard location (native HA completion registers itself for 'ha')
-        . /etc/bash_completion.d/ha
+    # Wrapper function to inject 'ha' as first argument for all completions
+    if declare -F __start_ha >/dev/null 2>&1; then
+        # Clear all existing completions to ensure our wrapper is used
+        complete -r
 
-        # Wrapper function to inject 'ha' as first argument for all completions
-        if declare -F __start_ha >/dev/null 2>&1; then
-            # Clear all existing completions to ensure our wrapper is used
-            while read -r cmd; do
-                complete -r "$cmd" 2>/dev/null || true
-            done < <(complete -p | awk '{print $NF}')
-
-            # Universal completion handler - wraps everything as 'ha ...'
-            __ha_repl_complete() {
-                if [[ ${COMP_WORDS[0]} == "ha" ]]; then
-                    # Explicit 'ha ...' - complete as-is, no prefixing needed
-                    COMPREPLY=()
-                    __start_ha
-                    return
-                elif [[ ${#COMP_WORDS[@]} -eq 0 || ( ${#COMP_WORDS[@]} -eq 1 && -z "${COMP_WORDS[0]}" ) ]]; then
-                    # Handle empty command line specially
-                    COMP_LINE="ha "
-                    COMP_POINT=3
-                    COMP_WORDS=(ha "")
-                    COMP_CWORD=1
-                else
-                    # Prepend 'ha' to existing words
-                    COMP_LINE="ha $COMP_LINE"
-                    COMP_POINT=$((COMP_POINT + 3))
-                    COMP_WORDS=(ha "${COMP_WORDS[@]}")
-                    COMP_CWORD=$((COMP_CWORD + 1))
-                fi
-
+        # Universal completion handler - wraps everything as 'ha ...'
+        __ha_repl_complete() {
+            if [[ ${COMP_WORDS[0]} == "ha" ]]; then
+                # Explicit 'ha ...' - complete as-is, no prefixing needed
                 COMPREPLY=()
                 __start_ha
-            }
+                return
+            elif [[ ${#COMP_WORDS[@]} -eq 0 || ( ${#COMP_WORDS[@]} -eq 1 && -z "${COMP_WORDS[0]}" ) ]]; then
+                # Handle empty command line specially
+                COMP_LINE="ha "
+                COMP_POINT=3
+                COMP_WORDS=(ha "")
+                COMP_CWORD=1
+            else
+                # Prepend 'ha' to existing words
+                COMP_LINE="ha $COMP_LINE"
+                COMP_POINT=$((COMP_POINT + 3))
+                COMP_WORDS=(ha "${COMP_WORDS[@]}")
+                COMP_CWORD=$((COMP_CWORD + 1))
+            fi
 
-            # Register our completion as the default for everything
-            complete -D -F __ha_repl_complete  # Default for any command
-            complete -E -F __ha_repl_complete  # Empty command line
-            complete -I -F __ha_repl_complete 2>/dev/null || true  # Initial word (bash 5+)
-        fi
+            COMPREPLY=()
+            __start_ha
+        }
+
+        # Register our completion as the default for everything
+        complete -D -F __ha_repl_complete  # Default for any command
+        complete -E -F __ha_repl_complete  # Empty command line
+        complete -I -F __ha_repl_complete 2>/dev/null || true  # Initial word (bash 5+)
     fi
 else
     echo 'Warning: ha command not found; commands will fail' >&2
 fi
 
+# Disable pathname expansion so '*' in arguments reaches ha verbatim - the
+# REPL only runs ha commands, which never want globbing
+set -f
+
 # Only expose the ha binary to the REPL: anything else falls through to
 # command_not_found_handle and is executed as an ha command, matching the
 # previous REPL behavior. Use "login" for a full shell on the host.
-PATH=/etc/ha-cli/bin
+PATH=/usr/share/ha-cli/bin
 readonly PATH
 hash -r
