@@ -37,11 +37,9 @@ login() {
     exit 10
 }
 
-# 'jobs' is both a Bash builtin and an ha command - the builtin would take
-# precedence over command_not_found_handle, so shadow it with a function
-jobs() {
-    ha jobs "$@"
-}
+# 'jobs' is both a Bash builtin and an ha command - disable the builtin so it
+# falls through to command_not_found_handle like other ha commands
+enable -n jobs
 
 if command -v ha >/dev/null 2>&1; then
     # Load bash-completion if the system bashrc did not already do it: it
