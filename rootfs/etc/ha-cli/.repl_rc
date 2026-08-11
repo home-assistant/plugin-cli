@@ -87,3 +87,10 @@ if command -v ha >/dev/null 2>&1; then
 else
     echo 'Warning: ha command not found; commands will fail' >&2
 fi
+
+# Only expose the ha binary to the REPL: anything else falls through to
+# command_not_found_handle and is executed as an ha command, matching the
+# previous REPL behavior. Use "login" for a full shell on the host.
+PATH=/etc/ha-cli/bin
+readonly PATH
+hash -r

@@ -27,7 +27,9 @@ RUN \
             *) echo "Unsupported TARGETARCH: ${TARGETARCH}" && exit 1 ;; \
         esac \
     && curl -Lfso /usr/bin/ha https://github.com/home-assistant/cli/releases/download/${CLI_VERSION}/ha_${CLI_ARCH} \
-    && chmod a+x /usr/bin/ha
+    && chmod a+x /usr/bin/ha \
+    && mkdir -p /etc/ha-cli/bin \
+    && ln -s /usr/bin/ha /etc/ha-cli/bin/ha
 
 COPY rootfs /
 WORKDIR /
