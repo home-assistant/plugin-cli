@@ -6,6 +6,10 @@ PS1='\[\e[32m\]ha > \[\e[0m\]'
 # Ignore EOF (Ctrl+D) so it does not exit the REPL
 set -o ignoreeof
 
+# List completion candidates one per line - the completion descriptions
+# make readline's multi-column layout hard to read on wide terminals
+bind "set completion-display-width 0"
+
 # Intercept unknown commands and pass them to 'ha'
 command_not_found_handle() {
     if ! command -v ha >/dev/null 2>&1; then
