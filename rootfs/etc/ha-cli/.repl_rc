@@ -99,6 +99,14 @@ __ha_run() {
     line="${line%"${line##*[![:space:]]}"}"
     [[ -z $line ]] && return 0
     case $line in
+        ha|ha\ *)
+            echo "Note: Leading 'ha' is not necessary in this HA CLI"
+            line="${line#ha}"
+            line="${line#"${line%%[![:space:]]*}"}"
+            [[ -z $line ]] && { ha; return; }
+            ;;
+    esac
+    case $line in
         exit) exit 0 ;;
         login|login\ *) login; return ;;
         help|help\ *)
@@ -113,9 +121,15 @@ __ha_run() {
 # parse it, keep it in the history, and execute it through __ha_run with a
 # sane terminal state
 __ha_accept() {
-    local line=$READLINE_LINE _saved
+    local line=$READLINE_LINE _saved prompt
     READLINE_LINE=''; READLINE_POINT=0
-    printf '\n'
+    # Bash 5.3 clears the visible input line before running a bind -x
+    # handler: re-print prompt and input so the accepted command line
+    # stays visible in the scrollback
+    prompt=${PS1@P}
+    prompt=${prompt//$'\001'/}
+    prompt=${prompt//$'\002'/}
+    printf '%s%s\n' "$prompt" "$line"
     [[ -n $line ]] && history -s "$line"
     _saved=$(/bin/stty -g); /bin/stty sane
     __ha_run "$line"
