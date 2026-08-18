@@ -1,0 +1,124 @@
+# ha REPL rcfile
+
+# Prompt
+PS1='\[\e[32m\]ha > \[\e[0m\]'
+
+# Ignore EOF (Ctrl+D) so it does not exit the REPL
+set -o ignoreeof
+
+# List completion candidates one per line - the completion descriptions
+# make readline's multi-column layout hard to read on wide terminals
+bind "set completion-display-width 0"
+
+login() {
+    echo 'Entering OS shell...'
+    exit 10
+}
+
+if command -v ha >/dev/null 2>&1; then
+    # Load bash-completion if the system bashrc did not already do it: it
+    # provides helper functions used by the generated ha completion and
+    # sources it from /etc/bash_completion.d
+    if ! declare -F _get_comp_words_by_ref >/dev/null 2>&1 \
+            && [ -f /usr/share/bash-completion/bash_completion ]; then
+        . /usr/share/bash-completion/bash_completion
+    fi
+
+    # Wrapper function to inject 'ha' as first argument for all completions
+    if declare -F __start_ha >/dev/null 2>&1; then
+        # Clear all existing completions to ensure our wrapper is used
+        complete -r
+
+        # Universal completion handler - wraps everything as 'ha ...'
+        __ha_repl_complete() {
+            if [[ ${COMP_WORDS[0]} == "ha" ]]; then
+                # Explicit 'ha ...' - complete as-is, no prefixing needed
+                COMPREPLY=()
+                __start_ha
+                return
+            elif [[ ${#COMP_WORDS[@]} -eq 0 || ( ${#COMP_WORDS[@]} -eq 1 && -z "${COMP_WORDS[0]}" ) ]]; then
+                # Handle empty command line specially
+                COMP_LINE="ha "
+                COMP_POINT=3
+                COMP_WORDS=(ha "")
+                COMP_CWORD=1
+            else
+                # Prepend 'ha' to existing words
+                COMP_LINE="ha $COMP_LINE"
+                COMP_POINT=$((COMP_POINT + 3))
+                COMP_WORDS=(ha "${COMP_WORDS[@]}")
+                COMP_CWORD=$((COMP_CWORD + 1))
+            fi
+
+            COMPREPLY=()
+            __start_ha
+        }
+
+        # Register our completion as the default for everything
+        complete -D -F __ha_repl_complete  # Default for any command
+        complete -E -F __ha_repl_complete  # Empty command line
+        complete -I -F __ha_repl_complete 2>/dev/null || true  # Initial word (bash 5+)
+    fi
+else
+    echo 'Warning: ha command not found; commands will fail' >&2
+fi
+
+# Run one REPL input line. The raw line is handed to ha via xargs like the
+# old rlwrap REPL did, so Bash never parses it: shell expansions ($, !, *,
+# ...) never happen and arguments (e.g. passwords containing $) reach ha
+# verbatim. Because nothing is parsed by Bash, builtins like 'jobs' no longer
+# shadow the ha command either.
+__ha_run() {
+    local line=$1
+    # Trim surrounding whitespace
+    line="${line#"${line%%[![:space:]]*}"}"
+    line="${line%"${line##*[![:space:]]}"}"
+    [[ -z $line ]] && return 0
+    case $line in
+        exit) exit 0 ;;
+        login|login\ *) login; return ;;
+        ha|ha\ *)
+            echo "Note: Leading 'ha' is not necessary in this HA CLI"
+            line="${line#ha}"
+            line="${line#"${line%%[![:space:]]*}"}"
+            [[ -z $line ]] && { ha; return; }
+            ;;
+        help)
+            # Bare 'help' - point at the OS shell before the ha help output
+            echo 'Note: Use "login" to enter operating system shell'
+            echo ''
+            echo '--------------------------------'
+            ;;
+    esac
+    printf '%s\n' "$line" | /usr/bin/xargs -o ha
+}
+
+# Accept-line replacement: consume the readline buffer without letting Bash
+# parse it, keep it in the history, and execute it through __ha_run with a
+# sane terminal state
+__ha_accept() {
+    local line=$READLINE_LINE _saved prompt
+    READLINE_LINE=''; READLINE_POINT=0
+    # Bash 5.3 clears the visible input line before running a bind -x
+    # handler: re-print prompt and input so the accepted command line
+    # stays visible in the scrollback
+    prompt=${PS1@P}
+    prompt=${prompt//$'\001'/}
+    prompt=${prompt//$'\002'/}
+    printf '%s%s\n' "$prompt" "$line"
+    [[ -n $line ]] && history -s "$line"
+    _saved=$(/bin/stty -g); /bin/stty sane
+    __ha_run "$line"
+    /bin/stty "$_saved"
+}
+
+bind -x '"\C-m": __ha_accept'
+bind -x '"\C-j": __ha_accept'
+
+# Unbind readline functions that accept or expand the line behind
+# __ha_accept's back: operate-and-get-next (C-o), edit-and-execute-command
+# (C-x C-e) and shell-expand-line (M-C-e), the last of which would perform
+# shell expansions - including command substitution - on the raw input.
+bind -r "\C-o"
+bind -r "\C-x\C-e"
+bind -r "\e\C-e"

@@ -1,24 +1,7 @@
 #!/bin/bash
 
+# Print banner (best-effort)
 ha banner || true
 
-# Run CLI
-COMMAND=""
-while true; do
-    COMMAND="$(rlwrap -S $'\e[32mha > \e[0m' -H /tmp/.cli_history -o cat)"
-
-    # Abort to host?
-    if [ "$COMMAND" == "help" ]; then
-        echo "Note: Use \"login\" to enter operating system shell"
-    elif [ "$COMMAND" == "login" ]; then
-        exit 10
-    elif [ "$COMMAND" == "exit" ]; then
-        exit
-    elif [ -z "${COMMAND##ha *}" ]; then
-        echo "Note: Leading 'ha' is not necessary in this HA CLI"
-        COMMAND=$(echo "$COMMAND" | cut -b 3-)
-    fi
-
-    echo "$COMMAND" | xargs -o ha
-    echo ""
-done
+# Start interactive bash with our rcfile as REPL; no user profiles
+exec bash --noprofile --rcfile /etc/ha-cli/.repl_rc -i

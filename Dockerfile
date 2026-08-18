@@ -8,22 +8,9 @@ SHELL ["/bin/ash", "-o", "pipefail", "-c"]
 # SIGTERM-to-SIGKILL grace sleep at shutdown.
 ENV S6_KILL_GRACETIME=0
 
-WORKDIR /usr/src
-
-# Install rlwrap
-ARG RLWRAP_VERSION=0.46.1
-RUN apk add --no-cache --virtual .build-deps \
-        build-base \
-        readline-dev \
-        ncurses-dev \
-    && curl -L -s "https://github.com/hanslub42/rlwrap/releases/download/${RLWRAP_VERSION}/rlwrap-${RLWRAP_VERSION}.tar.gz" \
-        | tar zxvf - -C /usr/src/ \
-    && cd rlwrap-${RLWRAP_VERSION} \
-    && ./configure \
-    && make \
-    && make install \
-    && apk del .build-deps \
-    && rm -rf /usr/src/*
+# Install dependencies
+RUN apk add --no-cache \
+    bash-completion
 
 # Install CLI
 ARG CLI_VERSION=5.3.1
@@ -38,10 +25,10 @@ RUN \
             *) echo "Unsupported TARGETARCH: ${TARGETARCH}" && exit 1 ;; \
         esac \
     && curl -Lfso /usr/bin/ha https://github.com/home-assistant/cli/releases/download/${CLI_VERSION}/ha_${CLI_ARCH} \
-    && chmod a+x /usr/bin/ha
+    && chmod a+x /usr/bin/ha \
+    && ha completion bash > /etc/bash_completion.d/ha
 
 COPY rootfs /
-WORKDIR /
 
 LABEL \
     io.hass.type="cli" \
