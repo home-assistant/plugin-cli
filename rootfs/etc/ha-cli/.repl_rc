@@ -89,13 +89,52 @@ else
     echo 'Warning: ha command not found; commands will fail' >&2
 fi
 
-# Disable pathname expansion so '*' in arguments reaches ha verbatim - the
-# REPL only runs ha commands, which never want globbing
-set -f
+# Run one REPL input line. The raw line is handed to ha via xargs like the
+# old rlwrap REPL did, so shell expansions ($, !, *, ...) never happen and
+# arguments (e.g. passwords containing $) reach ha verbatim.
+__ha_run() {
+    local line=$1 args
+    # Trim surrounding whitespace
+    line="${line#"${line%%[![:space:]]*}"}"
+    line="${line%"${line##*[![:space:]]}"}"
+    [[ -z $line ]] && return 0
+    case $line in
+        exit) exit 0 ;;
+        login|login\ *) login; return ;;
+        help|help\ *)
+            read -ra args <<< "${line#help}"
+            help "${args[@]}"
+            return ;;
+    esac
+    printf '%s\n' "$line" | /usr/bin/xargs -o ha
+}
 
-# Only expose the ha binary to the REPL: anything else falls through to
-# command_not_found_handle and is executed as an ha command, matching the
-# previous REPL behavior. Use "login" for a full shell on the host.
+# Accept-line replacement: consume the readline buffer without letting Bash
+# parse it, keep it in the history, and execute it through __ha_run with a
+# sane terminal state
+__ha_accept() {
+    local line=$READLINE_LINE _saved
+    READLINE_LINE=''; READLINE_POINT=0
+    printf '\n'
+    [[ -n $line ]] && history -s "$line"
+    _saved=$(/bin/stty -g); /bin/stty sane
+    __ha_run "$line"
+    /bin/stty "$_saved"
+}
+
+bind -x '"\C-m": __ha_accept'
+bind -x '"\C-j": __ha_accept'
+
+# Unbind readline functions that accept or execute the line behind
+# __ha_accept's back (operate-and-get-next, edit-and-execute-command)
+bind -r "\C-o"
+bind -r "\C-x\C-e"
+
+# Backstop hardening in case a line still reaches Bash's parser through an
+# unanticipated readline path: keep '!' and '*' unexpanded and only expose
+# the ha binary, so stray commands fall through to command_not_found_handle
+# and are executed as ha commands. Use "login" for a full shell on the host.
+set -f
 PATH=/usr/share/ha-cli/bin
 readonly PATH
 hash -r
