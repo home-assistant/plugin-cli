@@ -6,40 +6,14 @@ PS1='\[\e[32m\]ha > \[\e[0m\]'
 # Ignore EOF (Ctrl+D) so it does not exit the REPL
 set -o ignoreeof
 
-# Disable history expansion so '!' in arguments reaches ha verbatim
-set +H
-
 # List completion candidates one per line - the completion descriptions
 # make readline's multi-column layout hard to read on wide terminals
 bind "set completion-display-width 0"
-
-# Intercept unknown commands and pass them to 'ha'
-command_not_found_handle() {
-    if ! command -v ha >/dev/null 2>&1; then
-        echo "bash: $1: command not found" >&2
-        return 127
-    fi
-    ha "$@"
-}
-
-# Friendly helpers
-help() {
-    if [ $# -eq 0 ]; then
-        echo 'Note: Use "login" to enter operating system shell'
-        echo ''
-        echo '--------------------------------'
-    fi
-    ha help "$@"
-}
 
 login() {
     echo 'Entering OS shell...'
     exit 10
 }
-
-# 'jobs' is both a Bash builtin and an ha command - disable the builtin so it
-# falls through to command_not_found_handle like other ha commands
-enable -n jobs
 
 if command -v ha >/dev/null 2>&1; then
     # Load bash-completion if the system bashrc did not already do it: it
@@ -90,29 +64,31 @@ else
 fi
 
 # Run one REPL input line. The raw line is handed to ha via xargs like the
-# old rlwrap REPL did, so shell expansions ($, !, *, ...) never happen and
-# arguments (e.g. passwords containing $) reach ha verbatim.
+# old rlwrap REPL did, so Bash never parses it: shell expansions ($, !, *,
+# ...) never happen and arguments (e.g. passwords containing $) reach ha
+# verbatim. Because nothing is parsed by Bash, builtins like 'jobs' no longer
+# shadow the ha command either.
 __ha_run() {
-    local line=$1 args
+    local line=$1
     # Trim surrounding whitespace
     line="${line#"${line%%[![:space:]]*}"}"
     line="${line%"${line##*[![:space:]]}"}"
     [[ -z $line ]] && return 0
     case $line in
+        exit) exit 0 ;;
+        login|login\ *) login; return ;;
         ha|ha\ *)
             echo "Note: Leading 'ha' is not necessary in this HA CLI"
             line="${line#ha}"
             line="${line#"${line%%[![:space:]]*}"}"
             [[ -z $line ]] && { ha; return; }
             ;;
-    esac
-    case $line in
-        exit) exit 0 ;;
-        login|login\ *) login; return ;;
-        help|help\ *)
-            read -ra args <<< "${line#help}"
-            help "${args[@]}"
-            return ;;
+        help)
+            # Bare 'help' - point at the OS shell before the ha help output
+            echo 'Note: Use "login" to enter operating system shell'
+            echo ''
+            echo '--------------------------------'
+            ;;
     esac
     printf '%s\n' "$line" | /usr/bin/xargs -o ha
 }
@@ -139,16 +115,10 @@ __ha_accept() {
 bind -x '"\C-m": __ha_accept'
 bind -x '"\C-j": __ha_accept'
 
-# Unbind readline functions that accept or execute the line behind
-# __ha_accept's back (operate-and-get-next, edit-and-execute-command)
+# Unbind readline functions that accept or expand the line behind
+# __ha_accept's back: operate-and-get-next (C-o), edit-and-execute-command
+# (C-x C-e) and shell-expand-line (M-C-e), the last of which would perform
+# shell expansions - including command substitution - on the raw input.
 bind -r "\C-o"
 bind -r "\C-x\C-e"
-
-# Backstop hardening in case a line still reaches Bash's parser through an
-# unanticipated readline path: keep '!' and '*' unexpanded and only expose
-# the ha binary, so stray commands fall through to command_not_found_handle
-# and are executed as ha commands. Use "login" for a full shell on the host.
-set -f
-PATH=/usr/share/ha-cli/bin
-readonly PATH
-hash -r
+bind -r "\e\C-e"

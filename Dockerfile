@@ -26,8 +26,6 @@ RUN \
         esac \
     && curl -Lfso /usr/bin/ha https://github.com/home-assistant/cli/releases/download/${CLI_VERSION}/ha_${CLI_ARCH} \
     && chmod a+x /usr/bin/ha \
-    && mkdir -p /usr/share/ha-cli/bin \
-    && ln -s /usr/bin/ha /usr/share/ha-cli/bin/ha \
     && ha completion bash > /etc/bash_completion.d/ha
 
 COPY rootfs /
