@@ -31,6 +31,13 @@ if command -v ha >/dev/null 2>&1; then
 
         # Universal completion handler - wraps everything as 'ha ...'
         __ha_repl_complete() {
+            # The generated ha completion evals the command words, so refuse
+            # to complete a line holding any shell-active character: it is
+            # literal text for ha but code to that eval.
+            if [[ $COMP_LINE == *[![:alnum:]\ ._:/=,+@-]* ]]; then
+                COMPREPLY=()
+                return
+            fi
             if [[ ${COMP_WORDS[0]} == "ha" ]]; then
                 # Explicit 'ha ...' - complete as-is, no prefixing needed
                 COMPREPLY=()
@@ -114,6 +121,10 @@ __ha_accept() {
 
 bind -x '"\C-m": __ha_accept'
 bind -x '"\C-j": __ha_accept'
+
+# Readline completes filenames for words that bypass the compspec, like
+# '$(': run from an empty directory so it finds nothing
+mkdir -p /run/ha-cli/empty && cd /run/ha-cli/empty
 
 # Unbind readline functions that accept or expand the line behind
 # __ha_accept's back: operate-and-get-next (C-o), edit-and-execute-command
