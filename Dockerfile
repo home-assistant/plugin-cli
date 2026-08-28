@@ -13,7 +13,7 @@ RUN apk add --no-cache \
     bash-completion
 
 # Install CLI
-ARG CLI_VERSION=5.3.1
+ARG CLI_VERSION=5.4.0
 ARG TARGETARCH
 RUN \
     if [ -z "${TARGETARCH}" ]; then \
