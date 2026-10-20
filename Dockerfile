@@ -13,7 +13,7 @@ RUN apk add --no-cache \
     bash-completion
 
 # Install CLI (version updated by Renovate)
-ARG CLI_VERSION=5.5.0
+ARG CLI_VERSION=5.6.0
 ARG TARGETARCH
 RUN \
     if [ -z "${TARGETARCH}" ]; then \
