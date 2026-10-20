@@ -12,7 +12,7 @@ ENV S6_KILL_GRACETIME=0
 RUN apk add --no-cache \
     bash-completion
 
-# Install CLI
+# Install CLI (version updated by Renovate)
 ARG CLI_VERSION=5.5.0
 ARG TARGETARCH
 RUN \
