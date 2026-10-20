@@ -1,8 +1,19 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["helpers:pinGitHubActionDigests"],
-  "enabledManagers": ["dockerfile", "github-actions"],
+  "enabledManagers": ["dockerfile", "github-actions", "custom.regex"],
   "ignorePaths": [".devcontainer/**"],
+  "customManagers": [
+    {
+      "description": "Update the Home Assistant CLI version pinned via ARG CLI_VERSION in the Dockerfile",
+      "customType": "regex",
+      "managerFilePatterns": ["/^Dockerfile$/"],
+      "matchStrings": ["ARG CLI_VERSION=(?<currentValue>\\S+)"],
+      "depNameTemplate": "home-assistant/cli",
+      "datasourceTemplate": "github-releases",
+      "versioningTemplate": "semver"
+    }
+  ],
   "packageRules": [
     {
       "matchDatasources": ["docker"],
@@ -13,6 +24,14 @@
       "groupName": "docker-base",
       "commitMessageTopic": "home-assistant/base image",
       "commitMessageExtra": "to {{newValue}}"
+    },
+    {
+      "matchDatasources": ["github-releases"],
+      "matchPackageNames": ["home-assistant/cli"],
+      "description": "Match the manual bump PRs: \"Bump CLI to v5.5.0\"",
+      "commitMessageAction": "Bump",
+      "commitMessageTopic": "CLI",
+      "commitMessageExtra": "to v{{newValue}}"
     },
     {
       "description": "Label GitHub Actions updates like Dependabot did",
